@@ -1,0 +1,64 @@
+version: "3.3"
+
+services:
+
+  traefik:
+    image: "traefik:v3.3"
+    container_name: "traefik"
+    command:
+      # Enable debug logging to find problems
+      #- "--log.level=DEBUG"
+      # Enable Traefik Docker provider
+      - "--providers.docker=true"
+      # Do not expose containers unless explicitly told so
+      - "--providers.docker.exposedbydefault=false"
+      # Traefik will listen to incoming request on the port 80 (HTTP)
+      - "--entryPoints.web.address=:80"
+      # Traefik will listen to incoming request on the port 443 (HTTPS)
+      - "--entryPoints.websecure.address=:443"
+      # Redirect all HTTP to HTTPS:
+      - '--entrypoints.web.http.redirections.entrypoint.to=websecure'
+      - '--entrypoints.web.http.redirections.entrypoint.scheme=https'
+      # Define challenge type for certificate generation
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      # Define entry point to be used for certificate challenge
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      # Following line allows to use the Lets Encrypt staging environment. Enable for experimental use:
+      #- "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      # Define your email address used for certificate generation in the .env file
+      - "--certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}"
+      # Define path where to store the generated certificates
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - 'traefik-letsencrypt:/letsencrypt'
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      # Connect Traefik to network shared with app 1
+      - app1-network
+      # Connect Traefik to network shared with app 2
+      - app2-network
+      # Connect Traefik to network shared with app 3
+      - app3-network
+
+networks:
+
+  # Define external network which is created manually
+  app1-network:
+    external: true
+
+  # Define external network which is created manually
+  app2-network:
+    external: true
+
+  # Define external network which is created manually
+  app3-network:
+    external: true
+
+volumes:
+
+  # Define persistent volume to store certificates
+  traefik-letsencrypt:
+    driver: local
