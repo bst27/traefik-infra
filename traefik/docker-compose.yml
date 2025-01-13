@@ -1,0 +1,44 @@
+version: "3.3"
+
+services:
+
+  traefik:
+    image: "traefik:v3.3"
+    container_name: "traefik"
+    command:
+      # Enable debug logging to find problems
+      - "--log.level=DEBUG"
+      # Traefik will listen on port 8080 by default for API request.
+      - "--api.insecure=true"
+      # Enable Traefik Docker provider
+      - "--providers.docker=true"
+      # Do not expose containers unless explicitly told so
+      - "--providers.docker.exposedbydefault=false"
+      # Traefik will listen to incoming request on the port 80 (HTTP)
+      - "--entryPoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      # Connect Traefik to network shared with app 1
+      - app1-network
+      # Connect Traefik to network shared with app 2
+      - app2-network
+      # Connect Traefik to network shared with app 3
+      - app3-network
+
+networks:
+
+  # Define external network which is created manually
+  app1-network:
+    external: true
+
+  # Define external network which is created manually
+  app2-network:
+    external: true
+
+  # Define external network which is created manually
+  app3-network:
+    external: true

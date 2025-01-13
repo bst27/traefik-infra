@@ -1,0 +1,24 @@
+version: "3.3"
+
+services:
+
+  app3:
+    image: "traefik/whoami"
+    labels:
+      # Explicitly tell Traefik to expose this container
+      - "traefik.enable=true"
+      # The domain the service will respond to
+      - "traefik.http.routers.app3.rule=Host(`app3.localhost`)"
+      # Allow request only from the predefined entry point named "web"
+      - "traefik.http.routers.app3.entrypoints=web"
+      # Let Traefik know which network to use to reach this container
+      - "traefik.docker.network=app3-network"
+    networks:
+      # Connect container to network shared with Traefik
+      - app3-network
+
+networks:
+
+  # Define external network which is created manually
+  app3-network:
+    external: true
